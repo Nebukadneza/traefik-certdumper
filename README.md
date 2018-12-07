@@ -1,20 +1,24 @@
-# traefik-certdumper
-dump the Lets Encrypt certs that Traefik stores in acme.json - to .crt, .key and .pem
+# Single-domain traefik-certdumper for mailu
 
-pretty much to solve https://github.com/containous/traefik/issues/2418 using @flesser's
-compose-file script and https://github.com/containous/traefik/blob/master/contrib/scripts/dumpcerts.sh
-with a few little mods
+## Fork?
+This is a slight modification that is less flexible, but is adapted to the
+usecase in mailu. If you wish to deploy mailu behind a traefik, you face many
+problems. One of these is that you need to get the certificates into mailu in a
+very defined manner. This will copy the certificate for the **Main:**-domain
+given in the DOMAIN-environment onto `output`.
 
-I use Docker Swarm, so my additional compose file service is:
+If your output happens to be mailu-front-`/certs`, the certificate-watcher in
+the front-container will catch it and reload nginx. This works for mailu
+`TLS_FLAVOR=[mail, cert]`
+
 
 ```
-  # Watch acme.json and dump certificates to files
-  # https://github.com/containous/traefik/issues/2418#issuecomment-369225856
   certdumper:
-    image: svendowideit/traefik-certdumper:latest
+    restart: always
+    image: XXX
+    environment:
+      - DOMAIN=mail.your.doma.in
     volumes:
-      - traefikdata:/traefik
-    deploy:
-      mode: replicated
-      replicas: 1
+      - /data/traefik:/traefik
+      - /your/mailu/$ROOT/mailu/certs/:/output/
 ```
