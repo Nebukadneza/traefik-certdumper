@@ -1,5 +1,7 @@
 # Single-domain traefik-certdumper for mailu
 
+This is based on the work by Sven Dowideit on https://github.com/SvenDowideit/traefik-certdumper
+
 ## Fork?
 This is a slight modification that is less flexible, but is adapted to the
 usecase in mailu. If you wish to deploy mailu behind a traefik, you face many
@@ -15,7 +17,7 @@ the front-container will catch it and reload nginx. This works for mailu
 ```
   certdumper:
     restart: always
-    image: XXX
+    image: nebukadneza/traefik-certdumper:latest
     environment:
       - DOMAIN=mail.your.doma.in
     volumes:
