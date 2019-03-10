@@ -1,18 +1,14 @@
 # Single-domain traefik-certdumper for mailu
 
-This is based on the work by Sven Dowideit on https://github.com/SvenDowideit/traefik-certdumper
+This is based on the work by Ludovic Fernandez on https://github.com/ldez/traefik-certs-dumper
 
-## Fork?
-This is a slight modification that is less flexible, but is adapted to the
-usecase in mailu. If you wish to deploy mailu behind a traefik, you face many
-problems. One of these is that you need to get the certificates into mailu in a
-very defined manner. This will copy the certificate for the **Main:**-domain
-given in the DOMAIN-environment onto `output`.
+# What does it do
 
-If your output happens to be mailu-front-`/certs`, the certificate-watcher in
-the front-container will catch it and reload nginx. This works for mailu
-`TLS_FLAVOR=[mail, cert]`
-
+This wrapper around the excellent certs-dumper allows to extract certificates
+from traefiks acme.json once when they changed, and optionally (using
+`SCRIPT`), execute a command to make some outside service aware of the change.
+This can be useful if the certificates acquired by traefik are required
+elsewhere, for example for non-HTTPS protocols.
 
 ```
   certdumper:
@@ -20,7 +16,9 @@ the front-container will catch it and reload nginx. This works for mailu
     image: nebukadneza/traefik-certdumper:latest
     environment:
       - DOMAIN=mail.your.doma.in
+      - SCRIPT=docker resart cool_service
     volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
       - /data/traefik:/traefik
-      - /your/mailu/$ROOT/mailu/certs/:/output/
+      - /some/where/certs/:/output
 ```

@@ -2,29 +2,27 @@
 
 function dump() {
     echo "$(date) Dumping certificates"
-    bash dumpcerts.sh /traefik/acme.json /tmp/work/
 
-    for crt_file in $(ls /tmp/work/certs/*); do
-        pem_file=$(echo $crt_file | sed 's/certs/pem/g' | sed 's/.crt/-public.pem/g')
-        echo "openssl x509 -inform PEM -in $crt_file > $pem_file"
-        openssl x509 -inform PEM -in $crt_file > $pem_file
-    done
-    for key_file in $(ls /tmp/work/private/*); do
-        pem_file=$(echo $key_file | sed 's/private/pem/g' | sed 's/.key/-private.pem/g')
-        echo "openssl rsa -in $key_file -text > $pem_file"
-        openssl rsa -in $key_file -text > $pem_file
-    done
+    traefik-certs-dumper dump --crt-name "cert" --crt-ext ".pem" --key-name "key" --key-ext ".pem" --domain-subdir=true --dest /tmp/work --source /traefik/acme.json > /dev/null
 
-    echo "$(date) Copying certificates"
-    cp -v /tmp/work/pem/${DOMAIN}-private.pem /output/key.pem
-    cp -v /tmp/work/pem/${DOMAIN}-public.pem /output/cert.pem
+    if diff -q /tmp/work/${DOMAIN}/cert.pem /output/cert.pem >/dev/null && \
+	diff -q /tmp/work/${DOMAIN}/key.pem /output/key.pem >/dev/null ; then
+	echo "$(date) Certificate and key still up to date, doing nothing"
+    else
+	echo "$(date) Certificate or key differ, updating"
+	mv /tmp/work/${DOMAIN}/*.pem /output/
+
+	if [ -n "$SCRIPT" ] ; then
+		echo "$(date) Script is set to ${SCRIPT} … executing"
+		$SCRIPT
+	fi
+    fi
 }
 
-mkdir -p /tmp/work/pem /tmp/work/certs
-# run once on start to make sure we have any old certs
+mkdir -p /tmp/work
 dump
 
 while true; do
-    inotifywait -e modify /traefik/acme.json && \
-        dump
+    inotifywait -qq -e modify /traefik/acme.json
+    dump
 done
