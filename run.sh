@@ -14,7 +14,7 @@ function dump() {
 
 	if [ -n "$SCRIPT" ] ; then
 		echo "$(date) Script is set to ${SCRIPT} … executing"
-		$SCRIPT
+		sh -c "$SCRIPT"
 	fi
     fi
 }

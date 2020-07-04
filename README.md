@@ -16,7 +16,7 @@ elsewhere, for example for non-HTTPS protocols.
     image: nebukadneza/traefik-certdumper:latest
     environment:
       - DOMAIN=mail.your.doma.in
-      - SCRIPT=docker resart cool_service
+      - SCRIPT=chow foo:bar /output/*.pem ; docker restart cool_service
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
       - /data/traefik:/traefik
